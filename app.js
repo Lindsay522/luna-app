@@ -1,5 +1,5 @@
 /**
- * Luna — App logic (English): storage, dashboard, closet, outfits, planner, rooms
+ * Luna — Premium lifestyle app: wardrobe, planning, wellness, focus
  */
 
 (function () {
@@ -14,11 +14,32 @@
     reflections: "luna_reflections_en",
     tomorrow: "luna_tomorrow_en",
     focus: "luna_focus_en",
+    onboarding: "luna_onboarding_done_en",
   };
 
   var MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var WEEKDAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  var ROOM_NAMES = { reset: "Reset", study: "Study", sleep: "Sleep", yoga: "Yoga" };
+  var ROOM_NAMES = { reset: "Soft reset", study: "Deep study", sleep: "Wind down", yoga: "Stretch break", morning: "Morning start", creative: "Creative focus" };
+  var ROOM_GUIDANCE = {
+    reset: "Take a breath. Let today’s noise fade. You’re right here.",
+    study: "One task at a time. Put your phone away and dive in.",
+    sleep: "Dim the lights. This is your cue to slow down and rest.",
+    yoga: "Stand or sit. Stretch gently. Breathe in, then out.",
+    morning: "Start slow. Hydrate, move a little, then ease into your list.",
+    creative: "No judgment. Let ideas flow. You can edit later.",
+  };
+  var CATEGORY_ICONS = { Tops: "👕", Bottoms: "👖", Outerwear: "🧥", "Shoes & Bags": "👟", Accessories: "✨" };
+
+  // Onboarding
+  var onboardingEl = document.getElementById("onboardingOverlay");
+  var onboardingDone = document.getElementById("onboardingDone");
+  if (onboardingEl && onboardingDone) {
+    if (localStorage.getItem(KEYS.onboarding)) onboardingEl.classList.add("hidden");
+    onboardingDone.addEventListener("click", function () {
+      localStorage.setItem(KEYS.onboarding, "1");
+      onboardingEl.classList.add("hidden");
+    });
+  }
 
   function storage(key) {
     var defaultVal = key === "focus" || key === "reflections" ? {} : [];
@@ -98,7 +119,7 @@
     var sleepEl = document.getElementById("dashboardSleep");
     if (sleepEl) {
       if (lastSleep) sleepEl.textContent = (lastSleep.hours || "—") + " hrs";
-      else sleepEl.textContent = "No records";
+      else sleepEl.textContent = "—";
     }
     var sportList = storage("sport").get();
     var now = new Date();
@@ -110,7 +131,7 @@
     var count = weekSport.length;
     var mins = weekSport.reduce(function (sum, s) { return sum + (s.duration || 0); }, 0);
     var moveEl = document.getElementById("dashboardMovement");
-    if (moveEl) moveEl.textContent = count + " sessions · " + mins + " min";
+    if (moveEl) moveEl.textContent = count === 0 && mins === 0 ? "—" : count + " sessions · " + mins + " min";
   }
 
   function initFocus() {
@@ -146,6 +167,26 @@
   renderDashboardSummary();
   initFocus();
   initTomorrowStarter();
+  setDashboardInsight();
+
+  function setDashboardInsight() {
+    var el = document.getElementById("dashboardInsightText");
+    if (!el) return;
+    var mood = (function () {
+      var data = storage("focus").get();
+      var today = todayStr();
+      return typeof data === "object" && data[today] ? data[today] : null;
+    })();
+    var lines = [
+      "A small step today is still progress. Be kind to yourself.",
+      "You don’t have to do it all. Just the next right thing.",
+      "Rest is part of the plan.",
+      "Your best today might look different from yesterday. That’s okay.",
+    ];
+    if (mood === "low" || mood === "ok") lines.push("It’s okay to take things slow. You’re still moving.");
+    if (mood === "good" || mood === "great") lines.push("You’re in a good place. Use it gently.");
+    el.textContent = lines[Math.floor(Math.random() * lines.length)];
+  }
 
   var closetStore = storage("closet");
 
@@ -177,11 +218,13 @@
       var tags = (c.styleTags || "").split(/[,，]/).map(function (t) { return t.trim(); }).filter(Boolean);
       var tagsHtml = tags.length ? tags.map(function (t) { return '<span class="closet-item-tag">' + escapeHtml(t) + "</span>"; }).join("") : "";
       var price = c.price ? "$" + c.price : "";
+      var thumbIcon = CATEGORY_ICONS[c.category] || "✨";
       return '<div class="closet-item" data-id="' + escapeHtml(c.id) + '">' +
+        '<div class="closet-item-thumb">' + thumbIcon + "</div>" +
         '<div class="closet-item-name">' + escapeHtml(c.name) + "</div>" +
         '<div class="closet-item-meta">' + escapeHtml(c.brand || "") + (price ? " · " + price : "") + " · " + escapeHtml(c.season || "") + "</div>" +
         (tagsHtml ? '<div class="closet-item-tags">' + tagsHtml + "</div>" : "") +
-        '<button type="button" class="closet-item-del" data-id="' + escapeHtml(c.id) + '">Delete</button></div>";
+        '<button type="button" class="closet-item-del" data-id="' + escapeHtml(c.id) + '">Remove</button></div>";
     }).join("");
     grid.querySelectorAll(".closet-item-del").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -282,7 +325,7 @@
     var list = closetStore.get();
     var select = document.getElementById("onePieceSelect");
     if (!select) return;
-    select.innerHTML = '<option value="">Pick one item</option>' + list.map(function (c) {
+    select.innerHTML = '<option value="">Choose a piece…</option>' + list.map(function (c) {
       return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name) + " · " + escapeHtml(c.category || "") + "</option>";
     }).join("");
   }
@@ -298,13 +341,35 @@
     var matches = list.filter(function (c) {
       return c.id !== id && (c.season === item.season || c.category !== item.category);
     });
-    var tips = "Pair with: different categories (e.g. top + bottom), same season. ";
-    if (matches.length) tips += "In your closet: " + matches.slice(0, 5).map(function (m) { return m.name; }).join(", ");
+    var tips = "Pair with pieces from other categories (e.g. top + bottom) and similar season. ";
+    if (matches.length) tips += "Try: " + matches.slice(0, 5).map(function (m) { return m.name; }).join(", ");
     suggestions.textContent = tips;
   }
 
   var onePieceSelect = document.getElementById("onePieceSelect");
   if (onePieceSelect) onePieceSelect.addEventListener("change", updateOnePieceSuggestions);
+
+  var outfitPrompts = document.getElementById("outfitPrompts");
+  if (outfitPrompts) {
+    var promptMap = {
+      today: { name: "Today’s look", occasion: "Class" },
+      onepiece: { name: "Built around one piece", occasion: "Other" },
+      campus: { name: "Campus look", occasion: "Class" },
+      interview: { name: "Interview ready", occasion: "Interview" },
+      weekend: { name: "Weekend reset", occasion: "Other" },
+    };
+    outfitPrompts.querySelectorAll("[data-prompt]").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var key = this.getAttribute("data-prompt");
+        var p = promptMap[key];
+        if (!p) return;
+        var nameEl = document.getElementById("outfitName");
+        var occasionEl = document.getElementById("outfitOccasion");
+        if (nameEl) nameEl.placeholder = p.name;
+        if (occasionEl) occasionEl.value = p.occasion;
+      });
+    });
+  }
 
   renderCloset();
   renderOutfitPicker();
@@ -390,7 +455,7 @@
     var events = eventStore.get().filter(function (e) { return e.date === dateStr; }).sort(function (a, b) { return (a.time || "").localeCompare(b.time || ""); });
     listEl.innerHTML = events.length
       ? events.map(function (ev) { return '<div class="day-event"><span>' + (ev.time || "") + "</span> " + escapeHtml(ev.title || "") + "</div>"; }).join("")
-      : '<p class="hint">No events</p>';
+      : '<p class="hint">Nothing scheduled yet. Add something above.</p>';
     document.getElementById("addEventForm").dataset.date = dateStr;
     var refEl = document.getElementById("dayReflection");
     if (refEl) refEl.value = reflectionKey(dateStr);
@@ -447,7 +512,7 @@
     if (!el) return;
     el.innerHTML = list.length
       ? list.map(function (s) { return "<li>" + s.type + " " + (s.duration || 0) + " min · " + s.date + "</li>"; }).join("")
-      : '<li class="hint">No logs yet</li>';
+      : '<li class="hint">No sessions yet. Log one above.</li>';
   }
 
   document.getElementById("sleepForm").addEventListener("submit", function (e) {
@@ -475,7 +540,7 @@
     if (!el) return;
     el.innerHTML = list.length
       ? list.map(function (s) { return "<li>" + s.start + " → " + s.end + " · " + s.hours + " hrs · " + s.date + "</li>"; }).join("")
-      : '<li class="hint">No logs yet</li>';
+      : '<li class="hint">No entries yet. Log last night above.</li>';
   }
 
   document.getElementById("sportDate").value = todayStr();
@@ -487,15 +552,25 @@
   var overlay = document.getElementById("roomOverlay");
   var scene = document.getElementById("roomScene");
   var roomNameEl = document.getElementById("roomName");
+  var roomGuidanceEl = document.getElementById("roomGuidance");
+  var roomTimerEl = document.getElementById("roomTimer");
 
   function openRoom(roomId) {
     var name = ROOM_NAMES[roomId] || roomId;
+    var guidance = ROOM_GUIDANCE[roomId] || "";
     var inner = scene.querySelector(".room-inner");
     if (inner) inner.remove();
     var div = document.createElement("div");
     div.className = "room-inner room-" + roomId;
     scene.insertBefore(div, scene.firstChild);
     if (roomNameEl) roomNameEl.textContent = name;
+    if (scene) scene.setAttribute("data-room", roomId);
+    if (roomGuidanceEl) {
+      roomGuidanceEl.textContent = guidance;
+      roomGuidanceEl.style.display = guidance ? "block" : "none";
+      roomGuidanceEl.className = "room-guidance" + (roomId === "sleep" ? " room-guidance-dark" : "");
+    }
+    if (roomTimerEl) roomTimerEl.style.display = "none";
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden", "false");
   }
