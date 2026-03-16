@@ -19,8 +19,8 @@
   <div class="app">
     <header class="site-header">
       <div class="site-header-inner">
-        <a href="#" class="logo" data-nav="dashboard">Luna</a>
-        <a href="#" class="header-about" data-nav="settings">About</a>
+        <a href="#dashboard" class="logo" data-nav="dashboard">Luna</a>
+        <a href="#settings" class="header-about" data-nav="settings">About</a>
         <p class="tagline">Wardrobe · Rhythm · Wellness</p>
       </div>
     </header>
@@ -63,9 +63,9 @@
           <input type="text" class="input input-inline" id="tomorrowStarter" placeholder="e.g. Drink water, then open my notes" />
         </div>
         <div class="dashboard-actions">
-          <a href="#" class="btn btn-soft" data-nav="planner">Today’s plan</a>
-          <a href="#" class="btn btn-soft" data-nav="closet">Wardrobe</a>
-          <a href="#" class="btn btn-soft" data-nav="rooms">Focus space</a>
+          <a href="#planner" class="btn btn-soft" data-nav="planner">Today’s plan</a>
+          <a href="#closet" class="btn btn-soft" data-nav="closet">Wardrobe</a>
+          <a href="#rooms" class="btn btn-soft" data-nav="rooms">Focus space</a>
         </div>
         <p class="dashboard-copy">You’re doing enough.</p>
         <footer class="app-footer">
@@ -355,11 +355,11 @@
     </main>
 
     <nav class="nav-bottom">
-      <a href="#" class="nav-item active" data-nav="dashboard"><span class="nav-icon">◉</span><span>Home</span></a>
-      <a href="#" class="nav-item" data-nav="closet"><span class="nav-icon">◇</span><span>Wardrobe</span></a>
-      <a href="#" class="nav-item" data-nav="outfit"><span class="nav-icon">◆</span><span>Outfits</span></a>
-      <a href="#" class="nav-item" data-nav="planner"><span class="nav-icon">▣</span><span>Plan</span></a>
-      <a href="#" class="nav-item" data-nav="rooms"><span class="nav-icon">◎</span><span>Focus</span></a>
+      <a href="#dashboard" class="nav-item active" data-nav="dashboard"><span class="nav-icon">◉</span><span>Home</span></a>
+      <a href="#closet" class="nav-item" data-nav="closet"><span class="nav-icon">◇</span><span>Wardrobe</span></a>
+      <a href="#outfit" class="nav-item" data-nav="outfit"><span class="nav-icon">◆</span><span>Outfits</span></a>
+      <a href="#planner" class="nav-item" data-nav="planner"><span class="nav-icon">▣</span><span>Plan</span></a>
+      <a href="#rooms" class="nav-item" data-nav="rooms"><span class="nav-icon">◎</span><span>Focus</span></a>
     </nav>
   </div>
 
@@ -373,17 +373,12 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
   <script>
   (function() {
-    if (window.LunaNavReady) return;
-    document.body.addEventListener("click", function(e) {
-      var link = e.target && e.target.closest && e.target.closest("[data-nav]");
-      if (!link) return;
-      e.preventDefault();
-      e.stopPropagation();
-      var id = link.getAttribute("data-nav");
-      if (!id) return;
+    var validIds = ["dashboard","closet","outfit","planner","rooms","settings"];
+    function show(id) {
+      id = (id || "").replace(/^#/, "");
+      if (validIds.indexOf(id) === -1) id = "dashboard";
       document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
       var page = document.getElementById("page-" + id);
       if (page) page.classList.add("active");
@@ -391,8 +386,14 @@
         n.classList.remove("active");
         if (n.getAttribute("data-nav") === id) n.classList.add("active");
       });
-    });
+      if (window.location.hash !== "#" + id) window.location.hash = id;
+    }
+    function fromHash() { show(window.location.hash); }
+    window.addEventListener("hashchange", fromHash);
+    if (!window.location.hash || validIds.indexOf(window.location.hash.replace(/^#/,"")) === -1) window.location.hash = "dashboard";
+    fromHash();
   })();
   </script>
+  <script src="app.js"></script>
 </body>
 </html>
