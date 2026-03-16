@@ -374,5 +374,25 @@
   </div>
 
   <script src="app.js"></script>
+  <script>
+  (function() {
+    if (window.LunaNavReady) return;
+    document.body.addEventListener("click", function(e) {
+      var link = e.target && e.target.closest && e.target.closest("[data-nav]");
+      if (!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var id = link.getAttribute("data-nav");
+      if (!id) return;
+      document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
+      var page = document.getElementById("page-" + id);
+      if (page) page.classList.add("active");
+      document.querySelectorAll(".nav-item").forEach(function(n) {
+        n.classList.remove("active");
+        if (n.getAttribute("data-nav") === id) n.classList.add("active");
+      });
+    });
+  })();
+  </script>
 </body>
 </html>

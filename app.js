@@ -80,6 +80,7 @@
   }
 
   function showPage(id) {
+    if (!id) return;
     document.querySelectorAll(".page").forEach(function (p) { p.classList.remove("active"); });
     var page = document.getElementById("page-" + id);
     if (page) page.classList.add("active");
@@ -89,15 +90,16 @@
     });
   }
 
-  document.querySelectorAll("[data-nav]").forEach(function (el) {
-    el.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var link = e.target.closest && e.target.closest("[data-nav]");
-      var id = link ? link.getAttribute("data-nav") : this.getAttribute("data-nav");
-      if (id) showPage(id);
-    });
+  // Single delegated listener so nav always works (even if other script fails)
+  document.body.addEventListener("click", function (e) {
+    var link = e.target && e.target.closest && e.target.closest("[data-nav]");
+    if (!link) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var id = link.getAttribute("data-nav");
+    if (id) showPage(id);
   });
+  window.LunaNavReady = true;
 
   function setGreeting() {
     var h = new Date().getHours();
@@ -238,7 +240,8 @@
     });
   }
 
-  document.getElementById("closetForm").addEventListener("submit", function (e) {
+  var closetFormEl = document.getElementById("closetForm");
+  if (closetFormEl) closetFormEl.addEventListener("submit", function (e) {
     e.preventDefault();
     var form = this;
     var name = (form.name && form.name.value || "").trim();
@@ -263,8 +266,10 @@
     renderOnePieceOptions();
   });
 
-  document.getElementById("filterCategory").addEventListener("change", renderCloset);
-  document.getElementById("filterSeason").addEventListener("change", renderCloset);
+  var filterCat = document.getElementById("filterCategory");
+  var filterSea = document.getElementById("filterSeason");
+  if (filterCat) filterCat.addEventListener("change", renderCloset);
+  if (filterSea) filterSea.addEventListener("change", renderCloset);
 
   var outfitStore = storage("outfits");
 
@@ -300,7 +305,8 @@
     }).join("");
   }
 
-  document.getElementById("outfitForm").addEventListener("submit", function (e) {
+  var outfitFormEl = document.getElementById("outfitForm");
+  if (outfitFormEl) outfitFormEl.addEventListener("submit", function (e) {
     e.preventDefault();
     var name = (document.getElementById("outfitName") && document.getElementById("outfitName").value || "").trim();
     if (!name) return;
@@ -461,7 +467,8 @@
     if (refEl) refEl.value = reflectionKey(dateStr);
   }
 
-  document.getElementById("addEventForm").addEventListener("submit", function (e) {
+  var addEventFormEl = document.getElementById("addEventForm");
+  if (addEventFormEl) addEventFormEl.addEventListener("submit", function (e) {
     e.preventDefault();
     var date = this.dataset.date;
     if (!date) return;
@@ -476,24 +483,28 @@
     renderCal();
   });
 
-  document.getElementById("saveReflection").addEventListener("click", function () {
+  var saveReflEl = document.getElementById("saveReflection");
+  if (saveReflEl) saveReflEl.addEventListener("click", function () {
     if (!selectedDate) return;
     var text = (document.getElementById("dayReflection") && document.getElementById("dayReflection").value || "").trim();
     setReflection(selectedDate, text);
   });
 
-  document.getElementById("calPrev").addEventListener("click", function () {
+  var calPrevEl = document.getElementById("calPrev");
+  var calNextEl = document.getElementById("calNext");
+  if (calPrevEl) calPrevEl.addEventListener("click", function () {
     calMonth--;
     if (calMonth < 0) { calMonth = 11; calYear--; }
     renderCal();
   });
-  document.getElementById("calNext").addEventListener("click", function () {
+  if (calNextEl) calNextEl.addEventListener("click", function () {
     calMonth++;
     if (calMonth > 11) { calMonth = 0; calYear++; }
     renderCal();
   });
 
-  document.getElementById("sportForm").addEventListener("submit", function (e) {
+  var sportFormEl = document.getElementById("sportForm");
+  if (sportFormEl) sportFormEl.addEventListener("submit", function (e) {
     e.preventDefault();
     var type = document.getElementById("sportType").value;
     var duration = parseInt(document.getElementById("sportDuration").value, 10) || 0;
@@ -515,7 +526,8 @@
       : '<li class="hint">No sessions yet. Log one above.</li>';
   }
 
-  document.getElementById("sleepForm").addEventListener("submit", function (e) {
+  var sleepFormEl = document.getElementById("sleepForm");
+  if (sleepFormEl) sleepFormEl.addEventListener("submit", function (e) {
     e.preventDefault();
     var start = document.getElementById("sleepStart").value;
     var end = document.getElementById("sleepEnd").value;
@@ -543,8 +555,10 @@
       : '<li class="hint">No entries yet. Log last night above.</li>';
   }
 
-  document.getElementById("sportDate").value = todayStr();
-  document.getElementById("sleepDate").value = todayStr();
+  var sportDateEl = document.getElementById("sportDate");
+  var sleepDateEl = document.getElementById("sleepDate");
+  if (sportDateEl) sportDateEl.value = todayStr();
+  if (sleepDateEl) sleepDateEl.value = todayStr();
   renderCal();
   renderSportList();
   renderSleepList();
@@ -579,7 +593,8 @@
     btn.addEventListener("click", function () { openRoom(this.getAttribute("data-room")); });
   });
 
-  document.getElementById("roomClose").addEventListener("click", function () {
+  var roomCloseEl = document.getElementById("roomClose");
+  if (roomCloseEl) roomCloseEl.addEventListener("click", function () {
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden", "true");
   });
