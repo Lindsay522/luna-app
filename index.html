@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Luna · Outfit &amp; Self-Care</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a href="#" class="logo" data-nav="dashboard">Luna</a>
+        <p class="tagline">Wardrobe · Plans · Self-care</p>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="page page-dashboard active" id="page-dashboard">
+        <div class="dashboard-hero">
+          <p class="dashboard-greeting" id="dashboardGreeting">Good afternoon</p>
+          <p class="dashboard-date" id="dashboardDate"></p>
+        </div>
+        <div class="dashboard-cards">
+          <div class="card card-sleep">
+            <h3 class="card-label">Last night's sleep</h3>
+            <p class="card-value" id="dashboardSleep">—</p>
+            <p class="card-hint">Latest record</p>
+          </div>
+          <div class="card card-movement">
+            <h3 class="card-label">This week's movement</h3>
+            <p class="card-value" id="dashboardMovement">—</p>
+            <p class="card-hint">Sessions &amp; minutes</p>
+          </div>
+        </div>
+        <div class="card card-focus">
+          <h3 class="card-label">Today's mood</h3>
+          <div class="focus-options" id="focusOptions">
+            <button type="button" class="focus-btn" data-energy="low">Tired</button>
+            <button type="button" class="focus-btn" data-energy="ok">Okay</button>
+            <button type="button" class="focus-btn" data-energy="good">Good</button>
+            <button type="button" class="focus-btn" data-energy="great">Great</button>
+          </div>
+        </div>
+        <div class="card card-tomorrow">
+          <h3 class="card-label">First thing tomorrow</h3>
+          <p class="card-hint">Write one small task to get started easier</p>
+          <input type="text" class="input input-inline" id="tomorrowStarter" placeholder="e.g. Drink water, then open textbook" />
+        </div>
+        <div class="dashboard-actions">
+          <a href="#" class="btn btn-soft" data-nav="planner">Today's plan</a>
+          <a href="#" class="btn btn-soft" data-nav="closet">Closet</a>
+          <a href="#" class="btn btn-soft" data-nav="rooms">Spaces</a>
+        </div>
+        <p class="dashboard-copy" id="dashboardCopy">Take care of yourself today.</p>
+      </section>
+
+      <section class="page page-closet" id="page-closet">
+        <div class="section-head">
+          <h2 class="section-title">Closet</h2>
+          <p class="section-desc">Manage items for outfits and review</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Add item</h3>
+          <form class="form form-closet" id="closetForm">
+            <div class="form-row">
+              <label>Name</label>
+              <input type="text" class="input" name="name" placeholder="e.g. Cream cardigan" required />
+            </div>
+            <div class="form-row">
+              <label>Brand</label>
+              <input type="text" class="input" name="brand" placeholder="Brand name" />
+            </div>
+            <div class="form-row form-row-half">
+              <label>Category</label>
+              <select class="input" name="category">
+                <option value="Tops">Tops</option>
+                <option value="Bottoms">Bottoms</option>
+                <option value="Outerwear">Outerwear</option>
+                <option value="Shoes &amp; Bags">Shoes &amp; Bags</option>
+                <option value="Accessories">Accessories</option>
+              </select>
+            </div>
+            <div class="form-row form-row-half">
+              <label>Season</label>
+              <select class="input" name="season">
+                <option value="Spring">Spring</option>
+                <option value="Summer">Summer</option>
+                <option value="Fall">Fall</option>
+                <option value="Winter">Winter</option>
+                <option value="All-year">All-year</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Style tags (comma-separated)</label>
+              <input type="text" class="input" name="styleTags" placeholder="e.g. Minimal, casual" />
+            </div>
+            <div class="form-row form-row-half">
+              <label>Price (optional)</label>
+              <input type="number" class="input" name="price" placeholder="Optional" min="0" step="1" />
+            </div>
+            <div class="form-row form-row-half">
+              <label>Link (optional)</label>
+              <input type="url" class="input" name="link" placeholder="Optional" />
+            </div>
+            <div class="form-row">
+              <label>Notes / dupes</label>
+              <input type="text" class="input" name="dupeNote" placeholder="Optional" />
+            </div>
+            <button type="submit" class="btn btn-primary">Add to closet</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Filter</h3>
+          <div class="filter-row">
+            <select class="input input-sm" id="filterCategory">
+              <option value="">All categories</option>
+              <option value="Tops">Tops</option>
+              <option value="Bottoms">Bottoms</option>
+              <option value="Outerwear">Outerwear</option>
+              <option value="Shoes &amp; Bags">Shoes &amp; Bags</option>
+              <option value="Accessories">Accessories</option>
+            </select>
+            <select class="input input-sm" id="filterSeason">
+              <option value="">All seasons</option>
+              <option value="Spring">Spring</option>
+              <option value="Summer">Summer</option>
+              <option value="Fall">Fall</option>
+              <option value="Winter">Winter</option>
+              <option value="All-year">All-year</option>
+            </select>
+          </div>
+        </div>
+        <div class="closet-grid" id="closetGrid"></div>
+        <div class="empty-state" id="closetEmpty" style="display:none;">
+          <p>No items yet. Add your first piece to build your closet.</p>
+        </div>
+      </section>
+
+      <section class="page page-outfit" id="page-outfit">
+        <div class="section-head">
+          <h2 class="section-title">Outfits</h2>
+          <p class="section-desc">Pick from closet, save by occasion &amp; mood</p>
+        </div>
+        <div class="card">
+          <h3 class="card-title">New outfit</h3>
+          <form class="form" id="outfitForm">
+            <div class="form-row">
+              <label>Outfit name</label>
+              <input type="text" class="input" id="outfitName" placeholder="e.g. Monday work" required />
+            </div>
+            <div class="form-row form-row-half">
+              <label>Occasion</label>
+              <select class="input" id="outfitOccasion">
+                <option value="Class">Class</option>
+                <option value="Date">Date</option>
+                <option value="Cafe">Cafe</option>
+                <option value="Interview">Interview</option>
+                <option value="Workout">Workout</option>
+                <option value="Travel">Travel</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-row form-row-half">
+              <label>Weather / season</label>
+              <select class="input" id="outfitWeather">
+                <option value="Spring-Fall">Spring / Fall</option>
+                <option value="Summer">Summer</option>
+                <option value="Winter">Winter</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Items (multi-select from closet)</label>
+              <div class="outfit-picker" id="outfitPicker"></div>
+            </div>
+            <div class="form-row">
+              <label>Mood / style notes</label>
+              <input type="text" class="input" id="outfitMood" placeholder="e.g. Minimal, fresh" />
+            </div>
+            <button type="submit" class="btn btn-primary">Save outfit</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3 class="card-title">How do I style one piece?</h3>
+          <p class="hint">Pick one item for pairing ideas</p>
+          <select class="input" id="onePieceSelect"></select>
+          <div class="one-piece-suggestions" id="onePieceSuggestions"></div>
+        </div>
+        <div class="outfit-list" id="outfitList"></div>
+        <div class="empty-state" id="outfitEmpty" style="display:none;">
+          <p>No outfits yet. Create one from the form above.</p>
+        </div>
+      </section>
+
+      <section class="page page-planner" id="page-planner">
+        <div class="section-head">
+          <h2 class="section-title">Plan &amp; review</h2>
+          <p class="section-desc">Schedule, daily reflection, tomorrow start</p>
+        </div>
+        <div class="card card-calendar">
+          <div class="cal-header">
+            <h3 class="cal-title" id="calTitle">January 2025</h3>
+            <div class="cal-nav">
+              <button type="button" class="btn-icon" id="calPrev" aria-label="Previous month">‹</button>
+              <button type="button" class="btn-icon" id="calNext" aria-label="Next month">›</button>
+            </div>
+          </div>
+          <div class="cal-weekdays" id="calWeekdays"></div>
+          <div class="cal-days" id="calDays"></div>
+        </div>
+        <div class="card day-detail" id="dayDetail" style="display:none;">
+          <h3 class="card-title" id="dayDetailTitle">Jan 1</h3>
+          <div class="day-events" id="dayEventsList"></div>
+          <form class="form form-inline" id="addEventForm">
+            <input type="time" class="input input-sm" id="evTime" required />
+            <input type="text" class="input input-sm" id="evTitle" placeholder="Event" required />
+            <select class="input input-sm" id="evType">
+              <option value="default">General</option>
+              <option value="yoga">Yoga</option>
+              <option value="gym">Workout</option>
+              <option value="study">Study</option>
+              <option value="sleep">Rest</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+          </form>
+          <div class="form-row">
+            <label>Today's reflection</label>
+            <textarea class="input" id="dayReflection" placeholder="How did today go? A few lines is enough." rows="3"></textarea>
+          </div>
+          <button type="button" class="btn btn-soft" id="saveReflection">Save reflection</button>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Movement log</h3>
+          <form class="form form-row-inline" id="sportForm">
+            <select class="input input-sm" id="sportType">
+              <option value="Yoga">Yoga</option>
+              <option value="Run">Run</option>
+              <option value="Gym">Gym</option>
+              <option value="Other">Other</option>
+            </select>
+            <input type="number" class="input input-sm" id="sportDuration" placeholder="min" min="1" />
+            <input type="date" class="input input-sm" id="sportDate" />
+            <button type="submit" class="btn btn-primary btn-sm">Log</button>
+          </form>
+          <ul class="log-list" id="sportList"></ul>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Sleep log</h3>
+          <form class="form form-row-inline" id="sleepForm">
+            <input type="time" class="input input-sm" id="sleepStart" placeholder="Bed" />
+            <input type="time" class="input input-sm" id="sleepEnd" placeholder="Wake" />
+            <input type="date" class="input input-sm" id="sleepDate" />
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+          </form>
+          <ul class="log-list" id="sleepList"></ul>
+        </div>
+      </section>
+
+      <section class="page page-rooms" id="page-rooms">
+        <div class="section-head">
+          <h2 class="section-title">Focus spaces</h2>
+          <p class="section-desc">Step into an environment and settle in</p>
+        </div>
+        <div class="room-cards" id="roomCards">
+          <button type="button" class="room-card" data-room="reset">
+            <span class="room-card-icon">🌙</span>
+            <span class="room-card-name">Reset</span>
+            <span class="room-card-desc">Clear your head</span>
+          </button>
+          <button type="button" class="room-card" data-room="study">
+            <span class="room-card-icon">📚</span>
+            <span class="room-card-name">Study</span>
+            <span class="room-card-desc">Focus mode</span>
+          </button>
+          <button type="button" class="room-card" data-room="sleep">
+            <span class="room-card-icon">🛏</span>
+            <span class="room-card-name">Sleep</span>
+            <span class="room-card-desc">Wind down</span>
+          </button>
+          <button type="button" class="room-card" data-room="yoga">
+            <span class="room-card-icon">🧘</span>
+            <span class="room-card-name">Yoga</span>
+            <span class="room-card-desc">Breathe &amp; stretch</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="nav-bottom">
+      <a href="#" class="nav-item active" data-nav="dashboard"><span class="nav-icon">◉</span><span>Home</span></a>
+      <a href="#" class="nav-item" data-nav="closet"><span class="nav-icon">◇</span><span>Closet</span></a>
+      <a href="#" class="nav-item" data-nav="outfit"><span class="nav-icon">◆</span><span>Outfits</span></a>
+      <a href="#" class="nav-item" data-nav="planner"><span class="nav-icon">▣</span><span>Plan</span></a>
+      <a href="#" class="nav-item" data-nav="rooms"><span class="nav-icon">◎</span><span>Spaces</span></a>
+    </nav>
+  </div>
+
+  <div class="room-overlay" id="roomOverlay" aria-hidden="true">
+    <div class="room-scene" id="roomScene">
+      <button type="button" class="room-close" id="roomClose" aria-label="Close">×</button>
+      <div class="room-name" id="roomName">Reset</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
