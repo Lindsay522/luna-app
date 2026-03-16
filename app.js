@@ -71,7 +71,9 @@
   document.querySelectorAll("[data-nav]").forEach(function (el) {
     el.addEventListener("click", function (e) {
       e.preventDefault();
-      var id = this.getAttribute("data-nav");
+      e.stopPropagation();
+      var link = e.target.closest && e.target.closest("[data-nav]");
+      var id = link ? link.getAttribute("data-nav") : this.getAttribute("data-nav");
       if (id) showPage(id);
     });
   });

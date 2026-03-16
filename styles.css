@@ -355,4 +355,6 @@ textarea.input { min-height: 80px; resize: vertical; }
   transition: color 0.2s var(--ease);
 }
 .nav-item:hover, .nav-item.active { color: var(--accent); }
+.nav-item .nav-icon,
+.nav-item > span:last-child { pointer-events: none; }
 .nav-icon { font-size: 1.1rem; opacity: 0.8; }
