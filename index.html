@@ -375,6 +375,15 @@
 
   <script>
   (function() {
+    var ONBOARDING_KEY = "luna_onboarding_done_en";
+    var overlay = document.getElementById("onboardingOverlay");
+    var btn = document.getElementById("onboardingDone");
+    if (overlay && localStorage.getItem(ONBOARDING_KEY)) overlay.classList.add("hidden");
+    if (btn && overlay) btn.addEventListener("click", function() {
+      localStorage.setItem(ONBOARDING_KEY, "1");
+      overlay.classList.add("hidden");
+    });
+
     var validIds = ["dashboard","closet","outfit","planner","rooms","settings"];
     function show(id) {
       id = (id || "").replace(/^#/, "");
