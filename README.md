@@ -2,10 +2,29 @@
 
 **Repository:** [github.com/Lindsay522/luna-app](https://github.com/Lindsay522/luna-app)
 
-**Lunar** is the wardrobe, plan, wellness, and focus app (product name in the UI: **Luna**). **Vite + React** source.
+**Lunar** — wardrobe, plan, wellness, and focus (UI brand: **Luna**). This repo is the **Vite + React** app.
 
-- **Run:** `npm install` then `npm run dev`
-- **Build:** `npm run build` → `dist/`
-- **Data:** Same browser `localStorage` keys as `luna-app-en` (`luna_*_en`), so backups are compatible.
+## Run locally
 
-Optional: rename this directory to `lunar-app` locally to match the npm package name `lunar-app`.
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+Output is in `dist/`. Deploy that folder to **GitHub Pages**, Netlify, or any static host.
+
+## Data
+
+Uses the same browser `localStorage` keys as the static English build (`luna_*_en`), so JSON backups stay compatible.
+
+## What’s included
+
+Dashboard, wardrobe, outfits, calendar & reflection, movement & sleep logs, focus spaces with timer, export/import backup.
+
+Package name: `lunar-app` (see `package.json`).
