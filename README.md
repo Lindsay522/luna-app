@@ -21,13 +21,20 @@ Output is in `dist/`.
 
 ## Public URL (GitHub Pages)
 
-After you push to `main`, GitHub Actions builds and deploys automatically.
+**打开：** https://lindsay522.github.io/luna-app/
 
-**Live site:** https://lindsay522.github.io/luna-app/
+推送到 `main` 后，Actions 会执行 `npm run build`，并把 **`dist`** 推到分支 **`gh-pages`**（不是直接用源码里的 `index.html`，否则浏览器打不开 React）。
 
-**One-time setup on GitHub:** open the repo → **Settings** → **Pages** → **Build and deployment** → Source: **GitHub Actions** (not “Deploy from a branch”). The workflow `.github/workflows/deploy-pages.yml` will run on every push to `main`.
+### 第一次要在 GitHub 上选分支（很重要）
 
-**Local dev** still uses root `/` (`npm run dev` → http://localhost:5173/). Production build uses base path `/luna-app/` so assets load correctly on Pages.
+1. 打开：https://github.com/Lindsay522/luna-app/settings/pages  
+2. **Build and deployment** → Source：**Deploy from a branch**  
+3. **Branch** 选 **`gh-pages`**，文件夹选 **`/(root)`**，保存。  
+4. 等 1～2 分钟，再打开上面的链接。
+
+若看不到 `gh-pages` 分支：先到 **Actions** 里等 **Deploy to GitHub Pages** 跑成功一次。
+
+**本地开发**仍是 `npm run dev` → http://localhost:5173/（和线上路径无关）。
 
 ## Data
 
