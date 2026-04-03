@@ -1,3 +1,6 @@
+/** Persisted sync fingerprint for idempotent “local → cloud” migration */
+export const SYNC_STATE_KEY = "luna_cloud_sync_state_v1";
+
 export const KEYS = {
   closet: "luna_closet_en",
   outfits: "luna_outfits_en",
@@ -7,6 +10,8 @@ export const KEYS = {
   reflections: "luna_reflections_en",
   tomorrow: "luna_tomorrow_en",
   focus: "luna_focus_en",
+  /** Optional: completed focus timer sessions for backup / cloud sync */
+  focusSessions: "luna_focus_sessions_en",
   onboarding: "luna_onboarding_done_en",
 };
 

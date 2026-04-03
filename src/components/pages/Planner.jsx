@@ -1,8 +1,12 @@
 import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../hooks/useAuth.js";
 import { useLuna } from "../../hooks/useLuna.js";
 import { newId } from "../../lib/newId.js";
 import { MONTH_NAMES, WEEKDAYS } from "../../lib/constants.js";
 import { todayStr } from "../../lib/dates.js";
+import { api } from "../../api/client.js";
+import { eventFromApi, sleepFromApi, sportFromApi } from "../../api/lunaMaps.js";
 
 function buildCalendarCells(calYear, calMonth) {
   const first = new Date(calYear, calMonth, 1);
@@ -34,9 +38,65 @@ function buildCalendarCells(calYear, calMonth) {
   return cells;
 }
 
+function timeToApi(evTime) {
+  if (!evTime) return null;
+  const s = String(evTime).trim();
+  if (s.length === 5) return `${s}:00`;
+  return s;
+}
+
 export function Planner() {
   const luna = useLuna();
+  const auth = useAuth();
+  const qc = useQueryClient();
   const today = todayStr();
+
+  const eventsQ = useQuery({
+    queryKey: ["wellness-events"],
+    queryFn: async () => {
+      const rows = await api("/wellness/events");
+      return rows.map(eventFromApi);
+    },
+    enabled: auth.isCloud,
+  });
+
+  const sleepQ = useQuery({
+    queryKey: ["wellness-sleep"],
+    queryFn: async () => {
+      const rows = await api("/wellness/sleep?limit=60");
+      return rows.map(sleepFromApi);
+    },
+    enabled: auth.isCloud,
+  });
+
+  const sportQ = useQuery({
+    queryKey: ["wellness-sport"],
+    queryFn: async () => {
+      const rows = await api("/wellness/sport?limit=60");
+      return rows.map(sportFromApi);
+    },
+    enabled: auth.isCloud,
+  });
+
+  const addEventMut = useMutation({
+    mutationFn: (body) => api("/wellness/events", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["wellness-events"] }),
+  });
+
+  const delEventMut = useMutation({
+    mutationFn: (id) => api(`/wellness/events/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["wellness-events"] }),
+  });
+
+  const logSleepMut = useMutation({
+    mutationFn: (body) => api("/wellness/sleep", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["wellness-sleep", "analytics-summary"] }),
+  });
+
+  const logSportMut = useMutation({
+    mutationFn: (body) => api("/wellness/sport", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["wellness-sport", "analytics-summary"] }),
+  });
 
   const now = new Date();
   const [calYear, setCalYear] = useState(now.getFullYear());
@@ -49,7 +109,11 @@ export function Planner() {
 
   const [reflectionDraft, setReflectionDraft] = useState("");
 
-  const events = luna.getEvents();
+  const events = useMemo(() => {
+    if (auth.isCloud) return eventsQ.data ?? [];
+    return luna.getEvents();
+  }, [auth.isCloud, eventsQ.data, luna]);
+
   const cells = useMemo(() => buildCalendarCells(calYear, calMonth), [calYear, calMonth]);
 
   const dayEvents = useMemo(() => {
@@ -71,12 +135,31 @@ export function Planner() {
     if (!selectedDate) return;
     const title = evTitle.trim();
     if (!title) return;
+    if (auth.isCloud) {
+      addEventMut.mutate(
+        {
+          event_date: selectedDate,
+          event_time: timeToApi(evTime),
+          title,
+          event_type: evType,
+        },
+        {
+          onSuccess: () => setEvTitle(""),
+          onError: (err) => alert(err.message),
+        }
+      );
+      return;
+    }
     luna.setEvents([...events, { id: newId(), date: selectedDate, time: evTime, title, type: evType }]);
     setEvTitle("");
   };
 
   const removeEvent = (eid) => {
     if (!confirm("Remove this event?")) return;
+    if (auth.isCloud) {
+      delEventMut.mutate(eid, { onError: (err) => alert(err.message) });
+      return;
+    }
     luna.setEvents(events.filter((x) => x.id !== eid));
   };
 
@@ -118,6 +201,19 @@ export function Planner() {
     e.preventDefault();
     const duration = parseInt(sportDuration, 10) || 0;
     if (!sportDate || duration <= 0) return;
+    if (auth.isCloud) {
+      logSportMut.mutate(
+        { log_date: sportDate, activity: sportType, duration_min: duration },
+        {
+          onSuccess: () => {
+            setSportDuration("");
+            setSportDate(todayStr());
+          },
+          onError: (err) => alert(err.message),
+        }
+      );
+      return;
+    }
     luna.setSport([...luna.getSport(), { id: newId(), type: sportType, duration, date: sportDate }]);
     setSportDuration("");
     setSportDate(todayStr());
@@ -134,18 +230,43 @@ export function Planner() {
     const e2 = sleepEnd.split(":").map(Number);
     let mins = e2[0] * 60 + e2[1] - (s[0] * 60 + s[1]);
     if (mins <= 0) mins += 24 * 60;
-    const hours = (mins / 60).toFixed(1);
+    const hours = parseFloat((mins / 60).toFixed(1));
+    if (auth.isCloud) {
+      logSleepMut.mutate(
+        {
+          log_date: sleepDate,
+          bed_time: sleepStart.length === 5 ? `${sleepStart}:00` : sleepStart,
+          wake_time: sleepEnd.length === 5 ? `${sleepEnd}:00` : sleepEnd,
+          hours,
+        },
+        {
+          onSuccess: () => {
+            setSleepStart("");
+            setSleepEnd("");
+            setSleepDate(todayStr());
+          },
+          onError: (err) => alert(err.message),
+        }
+      );
+      return;
+    }
     luna.setSleep([
       ...luna.getSleep(),
-      { id: newId(), date: sleepDate, start: sleepStart, end: sleepEnd, hours },
+      { id: newId(), date: sleepDate, start: sleepStart, end: sleepEnd, hours: String(hours) },
     ]);
     setSleepStart("");
     setSleepEnd("");
     setSleepDate(todayStr());
   };
 
-  const sportList = luna.getSport().slice().reverse().slice(0, 20);
-  const sleepList = luna.getSleep().slice().reverse().slice(0, 14);
+  const sportList = auth.isCloud
+    ? (sportQ.data ?? []).slice().reverse().slice(0, 20)
+    : luna.getSport().slice().reverse().slice(0, 20);
+  const sleepList = auth.isCloud
+    ? (sleepQ.data ?? []).slice().reverse().slice(0, 14)
+    : luna.getSleep().slice().reverse().slice(0, 14);
+
+  const cloudBusy = auth.isCloud && (eventsQ.isPending || sleepQ.isPending || sportQ.isPending);
 
   return (
     <section className="page page-planner active">
@@ -153,6 +274,11 @@ export function Planner() {
         <h2 className="section-title">Plan &amp; wellness</h2>
         <p className="section-desc">Your day, your rhythm. Schedule, reflect, and track what supports you.</p>
       </div>
+      {cloudBusy && (
+        <p className="hint" style={{ marginBottom: "1rem" }}>
+          Syncing planner…
+        </p>
+      )}
 
       <div className="card card-calendar">
         <div className="cal-header">
@@ -205,7 +331,12 @@ export function Planner() {
                   <span className="day-event-main">
                     <span className="day-event-time">{ev.time}</span> <span className="day-event-title">{ev.title}</span>
                   </span>
-                  <button type="button" className="day-event-del" onClick={() => removeEvent(ev.id)}>
+                  <button
+                    type="button"
+                    className="day-event-del"
+                    onClick={() => removeEvent(ev.id)}
+                    disabled={auth.isCloud && delEventMut.isPending}
+                  >
                     Remove
                   </button>
                 </div>
@@ -235,7 +366,7 @@ export function Planner() {
               <option value="study">Study</option>
               <option value="sleep">Rest</option>
             </select>
-            <button type="submit" className="btn btn-primary btn-sm">
+            <button type="submit" className="btn btn-primary btn-sm" disabled={auth.isCloud && addEventMut.isPending}>
               Add
             </button>
           </form>
@@ -252,6 +383,9 @@ export function Planner() {
           <button type="button" className="btn btn-soft" onClick={saveReflection}>
             Save reflection
           </button>
+          <p className="hint" style={{ marginTop: 8 }}>
+            Reflections stay on this device until we add a notes API.
+          </p>
         </div>
       )}
 
@@ -279,7 +413,7 @@ export function Planner() {
             value={sportDate}
             onChange={(e) => setSportDate(e.target.value)}
           />
-          <button type="submit" className="btn btn-primary btn-sm">
+          <button type="submit" className="btn btn-primary btn-sm" disabled={auth.isCloud && logSportMut.isPending}>
             Log
           </button>
         </form>
@@ -318,7 +452,7 @@ export function Planner() {
             value={sleepDate}
             onChange={(e) => setSleepDate(e.target.value)}
           />
-          <button type="submit" className="btn btn-primary btn-sm">
+          <button type="submit" className="btn btn-primary btn-sm" disabled={auth.isCloud && logSleepMut.isPending}>
             Save
           </button>
         </form>

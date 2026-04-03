@@ -1,6 +1,13 @@
+import { useState } from "react";
 import { applyImportStores, clearAllLunaKeys, exportBackupFile } from "../../lib/lunaStorage.js";
+import { useAuth } from "../../hooks/useAuth.js";
+import { getApiBase } from "../../api/client.js";
 
 export function Settings() {
+  const auth = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const onImport = (e) => {
     const f = e.target.files?.[0];
@@ -32,6 +39,42 @@ export function Settings() {
     window.location.reload();
   };
 
+  const onLogin = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !password) return;
+    setBusy(true);
+    try {
+      await auth.login(email.trim(), password);
+      setPassword("");
+    } catch (err) {
+      alert(err?.message ?? "Login failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onRegister = async (e) => {
+    e.preventDefault();
+    if (!email.trim() || !password) return;
+    if (password.length < 8) {
+      alert("Password must be at least 8 characters.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await auth.register(email.trim(), password);
+      setPassword("");
+    } catch (err) {
+      alert(err?.message ?? "Could not register");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onLogout = () => {
+    auth.logout();
+  };
+
   return (
     <section className="page page-settings active">
       <div className="section-head">
@@ -49,13 +92,70 @@ export function Settings() {
         </div>
         <div className="settings-row">
           <span>Data</span>
-          <span>Stored locally in your browser</span>
+          <span>{auth.isCloud ? "Synced with Luna Platform API" : "Stored locally in your browser"}</span>
+        </div>
+        <div className="settings-row">
+          <span>API</span>
+          <span style={{ fontSize: "0.8rem", wordBreak: "break-all" }}>{getApiBase()}</span>
         </div>
         <div className="settings-row">
           <span>Stack</span>
-          <span>Vite + React</span>
+          <span>Vite + React · TanStack Query</span>
         </div>
       </div>
+
+      <div className="card">
+        <h3 className="card-title">Account</h3>
+        <p className="card-hint">
+          Sign in to sync wardrobe, outfits, planner, and analytics with the FastAPI backend. Local-only mode still works
+          without an account.
+        </p>
+        {auth.isCloud ? (
+          <div className="settings-account">
+            <p className="settings-email">
+              Signed in as <strong>{auth.user?.email}</strong>
+            </p>
+            <button type="button" className="btn btn-soft" onClick={onLogout}>
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <form className="form" onSubmit={onLogin}>
+            <div className="form-row">
+              <label>Email</label>
+              <input
+                type="email"
+                className="input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label>Password</label>
+              <input
+                type="password"
+                className="input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                minLength={8}
+                required
+              />
+            </div>
+            <div className="settings-actions" style={{ marginTop: 12 }}>
+              <button type="submit" className="btn btn-primary" disabled={busy}>
+                Sign in
+              </button>
+              <button type="button" className="btn btn-soft" disabled={busy} onClick={onRegister}>
+                Create account
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
       <div className="card">
         <h3 className="card-title">Your data</h3>
         <p className="card-hint">
@@ -70,7 +170,7 @@ export function Settings() {
             <input type="file" accept="application/json" className="visually-hidden" onChange={onImport} />
           </label>
           <button type="button" className="btn btn-ghost" onClick={onClear}>
-            Clear all data…
+            Clear all data
           </button>
         </div>
       </div>

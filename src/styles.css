@@ -408,6 +408,12 @@ textarea.input { min-height: 88px; resize: vertical; }
   margin-bottom: 6px;
 }
 .outfit-card-head .outfit-card-name { margin-bottom: 0; flex: 1; }
+.outfit-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 .outfit-card-del {
   font-size: 0.72rem;
   color: var(--ink-soft);
@@ -749,4 +755,95 @@ button.cal-day { font-family: inherit; padding: 0; margin: 0; }
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ----- Cloud sync (local → API) ----- */
+.cloud-sync-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(44, 40, 38, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  backdrop-filter: blur(6px);
+}
+.cloud-sync-modal {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 22px 20px 20px;
+  box-shadow: var(--shadow-card);
+}
+.cloud-sync-modal--result {
+  max-height: min(85vh, 560px);
+  overflow: auto;
+}
+.cloud-sync-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.cloud-sync-desc {
+  font-size: 0.88rem;
+  color: var(--ink-secondary);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.cloud-sync-list {
+  margin: 0 0 16px 18px;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+.cloud-sync-progress {
+  margin-bottom: 16px;
+}
+.cloud-sync-progress-bar-wrap {
+  height: 6px;
+  background: var(--border-soft);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.cloud-sync-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+  border-radius: var(--radius-pill);
+  transition: width 0.25s var(--ease);
+}
+.cloud-sync-progress-label {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+}
+.cloud-sync-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cloud-sync-actions--stack {
+  margin-top: 4px;
+}
+.cloud-sync-errors {
+  margin: 0 0 12px 18px;
+  font-size: 0.8rem;
+  color: var(--cocoa);
+  line-height: 1.4;
+}
+.cloud-sync-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.cloud-sync-count-pill {
+  font-size: 0.68rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--champagne-soft);
+  color: var(--ink-muted);
 }

@@ -1,17 +1,42 @@
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../hooks/useAuth.js";
 import { useLuna } from "../../hooks/useLuna.js";
 import { newId } from "../../lib/newId.js";
 import { CATEGORY_ICONS } from "../../lib/constants.js";
+import { api } from "../../api/client.js";
+import { closetFromApi, closetToApiCreate } from "../../api/lunaMaps.js";
 
 const CATEGORIES = ["Tops", "Bottoms", "Outerwear", "Shoes & Bags", "Accessories"];
 const SEASONS = ["Spring", "Summer", "Fall", "Winter", "All-year"];
 
 export function Closet() {
   const luna = useLuna();
+  const auth = useAuth();
+  const qc = useQueryClient();
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSeason, setFilterSeason] = useState("");
 
-  const list = luna.getCloset();
+  const cloudQ = useQuery({
+    queryKey: ["closet"],
+    queryFn: async () => {
+      const rows = await api("/closet");
+      return rows.map(closetFromApi);
+    },
+    enabled: auth.isCloud,
+  });
+
+  const addMut = useMutation({
+    mutationFn: (body) => api("/closet", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["closet"] }),
+  });
+
+  const delMut = useMutation({
+    mutationFn: (id) => api(`/closet/${id}`, { method: "DELETE" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["closet"] }),
+  });
+
+  const list = auth.isCloud ? cloudQ.data ?? [] : luna.getCloset();
   const filtered = list.filter((c) => {
     if (filterCategory && c.category !== filterCategory) return false;
     if (filterSeason && c.season !== filterSeason) return false;
@@ -19,6 +44,10 @@ export function Closet() {
   });
 
   const removeItem = (id) => {
+    if (auth.isCloud) {
+      delMut.mutate(id);
+      return;
+    }
     luna.setCloset(list.filter((c) => c.id !== id));
   };
 
@@ -28,8 +57,7 @@ export function Closet() {
     const name = (fd.get("name") || "").trim();
     if (!name) return;
     const priceRaw = fd.get("price");
-    const item = {
-      id: newId(),
+    const fields = {
       name,
       brand: (fd.get("brand") || "").trim(),
       category: fd.get("category") || "Tops",
@@ -39,6 +67,14 @@ export function Closet() {
       link: (fd.get("link") || "").trim() || null,
       dupeNote: (fd.get("dupeNote") || "").trim() || null,
     };
+    if (auth.isCloud) {
+      addMut.mutate(closetToApiCreate(fields), {
+        onError: (err) => alert(err.message),
+      });
+      e.target.reset();
+      return;
+    }
+    const item = { ...fields, id: newId() };
     luna.setCloset([...list, item]);
     e.target.reset();
   };
@@ -49,6 +85,16 @@ export function Closet() {
         <h2 className="section-title">Wardrobe</h2>
         <p className="section-desc">Your pieces, organized. Build outfits and track what you love.</p>
       </div>
+      {auth.isCloud && cloudQ.isPending && (
+        <p className="hint" style={{ marginBottom: "1rem" }}>
+          Syncing wardrobe…
+        </p>
+      )}
+      {auth.isCloud && cloudQ.isError && (
+        <p className="hint" style={{ marginBottom: "1rem", color: "var(--danger, #c0392b)" }}>
+          {cloudQ.error?.message ?? "Could not load wardrobe."}
+        </p>
+      )}
       <div className="card">
         <h3 className="card-title">Add a piece</h3>
         <form className="form form-closet" onSubmit={onSubmit}>
@@ -96,7 +142,7 @@ export function Closet() {
             <label>Notes</label>
             <input type="text" className="input" name="dupeNote" placeholder="Dupes, care, or reminders" />
           </div>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary" disabled={auth.isCloud && addMut.isPending}>
             Add to wardrobe
           </button>
         </form>
@@ -139,7 +185,7 @@ export function Closet() {
               .map((t) => t.trim())
               .filter(Boolean);
             const price = c.price ? `$${c.price}` : "";
-            const thumbIcon = CATEGORY_ICONS[c.category] || "✨";
+            const thumbIcon = CATEGORY_ICONS[c.category] || "·";
             return (
               <div key={c.id} className="closet-item" data-id={c.id}>
                 <div className="closet-item-thumb">{thumbIcon}</div>
@@ -157,7 +203,12 @@ export function Closet() {
                     ))}
                   </div>
                 )}
-                <button type="button" className="closet-item-del" onClick={() => removeItem(c.id)}>
+                <button
+                  type="button"
+                  className="closet-item-del"
+                  onClick={() => removeItem(c.id)}
+                  disabled={auth.isCloud && delMut.isPending}
+                >
                   Remove
                 </button>
               </div>

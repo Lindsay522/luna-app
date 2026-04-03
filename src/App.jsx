@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AuthProvider } from "./context/AuthProvider.jsx";
 import { LunaProvider } from "./context/LunaProvider.jsx";
 import { useHashRoute } from "./hooks/useHashRoute.js";
 import { Layout } from "./components/Layout.jsx";
@@ -10,6 +11,7 @@ import { Outfits } from "./components/pages/Outfits.jsx";
 import { Planner } from "./components/pages/Planner.jsx";
 import { Rooms } from "./components/pages/Rooms.jsx";
 import { Settings } from "./components/pages/Settings.jsx";
+import { CloudSyncPrompt } from "./components/CloudSyncPrompt.jsx";
 
 function LunaApp() {
   const { route, navigate } = useHashRoute();
@@ -38,6 +40,7 @@ function LunaApp() {
 
   return (
     <>
+      <CloudSyncPrompt />
       <Onboarding />
       <Layout route={route} navigate={navigate}>
         {page}
@@ -49,8 +52,10 @@ function LunaApp() {
 
 export default function App() {
   return (
-    <LunaProvider>
-      <LunaApp />
-    </LunaProvider>
+    <AuthProvider>
+      <LunaProvider>
+        <LunaApp />
+      </LunaProvider>
+    </AuthProvider>
   );
 }

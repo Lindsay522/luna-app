@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ROOM_NAMES, ROOM_GUIDANCE, ROOM_FOCUS_SECONDS } from "../lib/constants.js";
+import { useAuth } from "../hooks/useAuth.js";
+import { api } from "../api/client.js";
 
 function formatTimer(sec) {
   const m = Math.floor(sec / 60);
@@ -8,9 +11,13 @@ function formatTimer(sec) {
 }
 
 export function RoomOverlay({ roomId, onClose }) {
+  const auth = useAuth();
+  const qc = useQueryClient();
   const focusSecs = roomId ? ROOM_FOCUS_SECONDS[roomId] || 0 : 0;
   const [remaining, setRemaining] = useState(focusSecs);
   const [running, setRunning] = useState(false);
+  const startedAtRef = useRef(null);
+  const postedForSessionRef = useRef(false);
 
   useEffect(() => {
     if (!running) return;
@@ -45,6 +52,33 @@ export function RoomOverlay({ roomId, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [roomId, close]);
 
+  useEffect(() => {
+    if (!auth.isCloud || !roomId || !focusSecs) return;
+    if (remaining !== 0 || !startedAtRef.current || postedForSessionRef.current) return;
+    postedForSessionRef.current = true;
+    const started = startedAtRef.current;
+    const ended = new Date().toISOString();
+    const completedSeconds = focusSecs;
+    (async () => {
+      try {
+        await api("/wellness/focus-sessions", {
+          method: "POST",
+          body: JSON.stringify({
+            room_type: roomId,
+            planned_seconds: focusSecs,
+            completed_seconds: completedSeconds,
+            completed: true,
+            started_at: started,
+            ended_at: ended,
+          }),
+        });
+        await qc.invalidateQueries({ queryKey: ["analytics-summary"] });
+      } catch {
+        /* network */
+      }
+    })();
+  }, [remaining, auth.isCloud, roomId, focusSecs, qc]);
+
   if (!roomId) return null;
 
   const name = ROOM_NAMES[roomId] || roomId;
@@ -52,6 +86,8 @@ export function RoomOverlay({ roomId, onClose }) {
   const showTimer = focusSecs > 0;
 
   const startTimer = () => {
+    postedForSessionRef.current = false;
+    startedAtRef.current = new Date().toISOString();
     setRemaining(focusSecs);
     setRunning(true);
   };
@@ -59,6 +95,8 @@ export function RoomOverlay({ roomId, onClose }) {
   const resetTimer = () => {
     setRunning(false);
     setRemaining(focusSecs);
+    startedAtRef.current = null;
+    postedForSessionRef.current = false;
   };
 
   return (

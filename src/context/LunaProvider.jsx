@@ -1,9 +1,11 @@
 import { useMemo, useState, useCallback } from "react";
 import { KEYS } from "../lib/constants.js";
 import { readJson, writeJson } from "../lib/lunaStorage.js";
+import { useAuth } from "../hooks/useAuth.js";
 import { LunaContext } from "./lunaContext.js";
 
 export function LunaProvider({ children }) {
+  const auth = useAuth();
   const [version, setVersion] = useState(0);
   const bump = useCallback(() => setVersion((v) => v + 1), []);
 
@@ -11,6 +13,8 @@ export function LunaProvider({ children }) {
     () => ({
       version,
       bump,
+      isCloud: auth.isCloud,
+      user: auth.user,
       getCloset: () => readJson(KEYS.closet, []),
       setCloset: (v) => {
         writeJson(KEYS.closet, v);
@@ -57,7 +61,7 @@ export function LunaProvider({ children }) {
         bump();
       },
     }),
-    [version, bump]
+    [version, bump, auth.isCloud, auth.user]
   );
 
   return <LunaContext.Provider value={value}>{children}</LunaContext.Provider>;

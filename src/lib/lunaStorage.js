@@ -1,4 +1,4 @@
-import { KEYS } from "./constants.js";
+import { KEYS, SYNC_STATE_KEY } from "./constants.js";
 import { todayStr } from "./dates.js";
 
 export function readJson(key, defaultVal) {
@@ -63,6 +63,11 @@ export function applyImportStores(stores) {
 
 export function clearAllLunaKeys() {
   allStorageKeyValues().forEach((key) => localStorage.removeItem(key));
+  try {
+    localStorage.removeItem(SYNC_STATE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function exportBackupFile() {
