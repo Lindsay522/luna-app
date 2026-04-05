@@ -1,8 +1,37 @@
-# Lunar app (React)
+# Luna — Lifestyle, Wardrobe & Wellness
 
-**Repository:** [github.com/Lindsay522/luna-app](https://github.com/Lindsay522/luna-app)
+**Luna** is a calm, mobile-first web app for **wardrobe**, **daily planning**, **wellness logs** (sleep, movement, mood), and **short focus sessions** with timers.  
+The UI brand is *Luna*; the npm package name is `lunar-app`.
 
-**Lunar** — wardrobe, plan, wellness, and focus (UI brand: **Luna**). This repo is the **Vite + React** app.
+| For reviewers | Link |
+|----------------|------|
+| **Live demo** | [lindsay522.github.io/luna-app](https://lindsay522.github.io/luna-app/) |
+| **Source (this repo)** | [github.com/Lindsay522/luna-app](https://github.com/Lindsay522/luna-app) |
+| **Backend (FastAPI)** | Optional companion API (`luna-platform/backend` in a monorepo, or your own deployed copy). The SPA uses `VITE_API_URL`; see the **Luna Platform** README in the same portfolio tree if you have it. |
+
+---
+
+## What it does
+
+- **Dashboard** — greeting, sleep/movement snapshot, mood check-in, optional analytics when signed in  
+- **Wardrobe** — add/filter clothing items by category and season  
+- **Outfits** — save looks, quick prompts, “wear today” log when using the API  
+- **Plan & wellness** — month calendar, events, reflections (stored locally), movement and sleep logs  
+- **Focus spaces** — room-themed overlays with **10 / 25 minute** timers; completed sessions can sync to the API  
+- **Settings** — export/import JSON backup, clear local data, **sign in** to connect a FastAPI backend  
+- **Cloud mode** — after login, data reads/writes go to the API; you can **import prior local-only data** via the on-screen prompt (fingerprinted to avoid duplicate uploads)
+
+---
+
+## Tech stack
+
+- **React 19** + **Vite 8**
+- **TanStack Query** for server state
+- **Recharts** for analytics charts (when signed in)
+- **Hash routing** (no server rewrite needed on GitHub Pages)
+- **localStorage** for offline-first keys (`luna_*_en`) + **sessionStorage** for JWT when using the API
+
+---
 
 ## Run locally
 
@@ -11,37 +40,73 @@ npm install
 npm run dev
 ```
 
-## Build
+Open [http://localhost:5173](http://localhost:5173) (dev uses base path `/`).
 
 ```bash
-npm run build
+npm run build   # output: dist/
+npm run preview # optional: test production build
+npm run lint
 ```
 
-Output is in `dist/`.
+---
 
-## Public URL (GitHub Pages)
+## Environment variables
 
-**打开：** https://lindsay522.github.io/luna-app/
+| Variable | When | Example |
+|----------|------|---------|
+| `VITE_API_URL` | Point the app at your API | `http://127.0.0.1:8000/api/v1` |
 
-推送到 `main` 后，Actions 会执行 `npm run build`，并把 **`dist`** 推到分支 **`gh-pages`**（不是直接用源码里的 `index.html`，否则浏览器打不开 React）。
+For local development, create **`.env.development`** (this repo includes an example):
 
-### 第一次要在 GitHub 上选分支（很重要）
+```env
+VITE_API_URL=http://127.0.0.1:8000/api/v1
+```
 
-1. 打开：https://github.com/Lindsay522/luna-app/settings/pages  
-2. **Build and deployment** → Source：**Deploy from a branch**  
-3. **Branch** 选 **`gh-pages`**，文件夹选 **`/(root)`**，保存。  
-4. 等 1～2 分钟，再打开上面的链接。
+Production / GitHub Pages: set `VITE_API_URL` in your host’s build settings if you deploy the SPA with a **public** API (same variable name). If unset, requests default to path `/api/v1` (only works if you add a reverse proxy).
 
-若看不到 `gh-pages` 分支：先到 **Actions** 里等 **Deploy to GitHub Pages** 跑成功一次。
+**CORS:** your API must allow the Pages origin (e.g. `https://lindsay522.github.io`). See the backend `.env.example` (`CORS_ORIGINS`).
 
-**本地开发**仍是 `npm run dev` → http://localhost:5173/（和线上路径无关）。
+---
 
-## Data
+## GitHub Pages (how this repo deploys)
 
-Uses the same browser `localStorage` keys as the static English build (`luna_*_en`), so JSON backups stay compatible.
+- **Workflow:** [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) — on push to `main`, runs `npm ci` + `npm run build` and publishes **`dist`** to branch **`gh-pages`**.  
+- **Vite** production `base` is `/luna-app/` so assets load under `https://<user>.github.io/luna-app/`.
 
-## What’s included
+**One-time GitHub settings**
 
-Dashboard, wardrobe, outfits, calendar & reflection, movement & sleep logs, focus spaces with timer, export/import backup.
+1. Repo → **Settings** → **Pages**  
+2. **Build and deployment** → Source: **Deploy from a branch**  
+3. Branch: **`gh-pages`**, folder: **`/ (root)`**  
+4. Wait a minute after the first successful **Actions** run if `gh-pages` did not exist yet.
 
-Package name: `lunar-app` (see `package.json`).
+Local dev is unchanged (`npm run dev`); only production builds use the `/luna-app/` base path.
+
+---
+
+## Data & privacy
+
+- **Offline:** JSON in `localStorage`; you can **export/import** a backup from Settings.  
+- **Signed in:** Bearer token in `sessionStorage`; wardrobe/wellness/analytics hit your API.  
+- **Reflections** (“today’s reflection” text) stay **browser-only** until a notes API exists.
+
+---
+
+## Repository layout (high level)
+
+```
+src/
+  api/           # fetch client + field maps (local ↔ API)
+  components/    # layout, onboarding, room overlay, cloud sync prompt, pages
+  context/       # LunaProvider (local), AuthProvider (JWT)
+  hooks/         # useLuna, useAuth, hash route
+  lib/           # dates, storage helpers, constants
+  sync/          # local → cloud migration + fingerprint state
+```
+
+---
+
+## Credits
+
+Designed by **Lindsay**.  
+Package name: `lunar-app` (`package.json`).
