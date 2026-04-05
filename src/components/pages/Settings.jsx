@@ -92,23 +92,23 @@ export function Settings() {
         </div>
         <div className="settings-row">
           <span>Data</span>
-          <span>{auth.isCloud ? "Synced with Luna Platform API" : "Stored locally in your browser"}</span>
+          <span>{auth.isCloud ? "Saving to my API when you’re signed in" : "Just this browser (localStorage)"}</span>
         </div>
         <div className="settings-row">
-          <span>API</span>
+          <span>API base</span>
           <span style={{ fontSize: "0.8rem", wordBreak: "break-all" }}>{getApiBase()}</span>
         </div>
         <div className="settings-row">
-          <span>Stack</span>
-          <span>Vite + React · TanStack Query</span>
+          <span>Built with</span>
+          <span>Vite + React</span>
         </div>
       </div>
 
       <div className="card">
         <h3 className="card-title">Account</h3>
         <p className="card-hint">
-          Sign in to sync wardrobe, outfits, planner, and analytics with the FastAPI backend. Local-only mode still works
-          without an account.
+          Optional: sign in if you’re running the FastAPI server and want data off this laptop. Everything still works
+          offline without an account.
         </p>
         {auth.isCloud ? (
           <div className="settings-account">

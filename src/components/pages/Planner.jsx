@@ -384,7 +384,7 @@ export function Planner() {
             Save reflection
           </button>
           <p className="hint" style={{ marginTop: 8 }}>
-            Reflections stay on this device until we add a notes API.
+            Reflections only live in this browser for now.
           </p>
         </div>
       )}

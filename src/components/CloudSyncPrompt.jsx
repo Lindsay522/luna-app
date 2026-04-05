@@ -94,11 +94,11 @@ export function CloudSyncPrompt() {
         <div className="cloud-sync-overlay" role="dialog" aria-modal="true" aria-labelledby="cloud-sync-title">
           <div className="cloud-sync-modal">
             <h2 id="cloud-sync-title" className="cloud-sync-title">
-              Import your local data to cloud?
+              Upload this browser’s data?
             </h2>
             <p className="cloud-sync-desc">
-              You have Luna data saved in this browser. Upload it to your account so it appears on the server and in
-              analytics. This runs once per device until your local data changes.
+              Looks like you still have Luna saved only on this device. Want to copy it to your account? This pops up
+              again if your local data changes.
             </p>
             <ul className="cloud-sync-list">
               <li>Wardrobe &amp; outfits</li>
@@ -122,7 +122,7 @@ export function CloudSyncPrompt() {
             )}
             <div className="cloud-sync-actions">
               <button type="button" className="btn btn-primary" onClick={onConfirm} disabled={busy}>
-                {busy ? "Uploading…" : "Import to cloud"}
+                {busy ? "Uploading…" : "Yes, upload"}
               </button>
               <button type="button" className="btn btn-soft" onClick={onLater} disabled={busy}>
                 Not now
@@ -136,10 +136,10 @@ export function CloudSyncPrompt() {
         <div className="cloud-sync-overlay" role="dialog" aria-modal="true" aria-labelledby="cloud-sync-result-title">
           <div className="cloud-sync-modal cloud-sync-modal--result">
             <h2 id="cloud-sync-result-title" className="cloud-sync-title">
-              Sync finished with issues
+              Didn’t all go through
             </h2>
             <p className="cloud-sync-desc">
-              Some rows could not be uploaded. Your local data was kept so you can try again.
+              A few things failed on the server. Nothing was deleted here — you can fix whatever broke and try again.
             </p>
             <ul className="cloud-sync-errors">
               {result.errors.slice(0, 12).map((e, i) => (
